@@ -3,10 +3,9 @@ package app
 import (
 	"encoding/json"
 	"encoding/xml"
-	"fmt"
 	"net/http"
 
-	"github.com/gorilla/mux"
+	"banking.com/abelh/services"
 )
 
 type Customer struct {
@@ -15,27 +14,19 @@ type Customer struct {
 	Level   string `json:"level" xml:"Level"`
 }
 
-func helloword(rw http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(rw, "¡Hello World!")
+type CustomerHandlers struct {
+	service services.CustomerService
 }
 
-func getAllCustomers(rw http.ResponseWriter, r *http.Request) {
-	varsRequest := mux.Vars(r)
+func (ch *CustomerHandlers) getAllCustomers(rw http.ResponseWriter, r *http.Request) {
 
-	customers := []Customer{
-		{Name: "Abel", Account: varsRequest["customer_id"], Level: "A"},
-	}
+	customers, _ := ch.service.GetAllCustomers()
 
 	if r.Header.Get("Content-Type") == "application/xml" {
 		rw.Header().Add("Content-Type", "application/xml")
 		xml.NewEncoder(rw).Encode(customers)
-
 	} else {
 		rw.Header().Add("Content-Type", "application/json")
 		json.NewEncoder(rw).Encode(customers)
 	}
-}
-
-func createCustomer(rw http.ResponseWriter, r *http.Request) {
-
 }
