@@ -1,5 +1,7 @@
 package domain
 
+import "banking.com/abelh/errs"
+
 // Define struct of customers
 type Customer struct {
 	Id          int64
@@ -11,5 +13,5 @@ type Customer struct {
 }
 type ICustomerRepository interface {
 	FindAll() ([]Customer, error)
-	GetById(string) (*Customer, error)
+	GetById(string) (*Customer, *errs.AppError)
 }

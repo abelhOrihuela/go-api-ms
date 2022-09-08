@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"banking.com/abelh/errs"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -40,7 +41,7 @@ func (d CustomerRepositoryDB) FindAll() ([]Customer, error) {
 	return customers, nil
 }
 
-func (d CustomerRepositoryDB) GetById(id string) (*Customer, error) {
+func (d CustomerRepositoryDB) GetById(id string) (*Customer, *errs.AppError) {
 	findAllSql := "SELECT * FROM customers WHERE customer_id = ?"
 
 	row := d.client.QueryRow(findAllSql, id)
@@ -49,8 +50,13 @@ func (d CustomerRepositoryDB) GetById(id string) (*Customer, error) {
 	err := row.Scan(&c.Id, &c.Name, &c.City, &c.ZipCode, &c.DateOfBirth, &c.Status)
 
 	if err != nil {
-		log.Println("Error while scanning row of table customers", err.Error())
-		return nil, err
+		if err == sql.ErrNoRows {
+			return nil, errs.NewNotFoundError("Customer not found")
+		} else {
+			log.Println("Error while scanning row of table customers", err.Error())
+			return nil, errs.NewUnexpectedDatabaseError("unexpected database error")
+		}
+
 	}
 
 	return &c, nil

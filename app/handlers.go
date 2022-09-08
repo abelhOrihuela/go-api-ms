@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"encoding/xml"
+	"fmt"
 	"net/http"
 
 	"banking.com/abelh/services"
@@ -35,13 +36,18 @@ func (ch *CustomerHandlers) getAllCustomers(rw http.ResponseWriter, r *http.Requ
 func (ch *CustomerHandlers) getById(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
-	customers, _ := ch.service.GetById(id)
+	customers, err := ch.service.GetById(id)
 
-	if r.Header.Get("Content-Type") == "application/xml" {
-		rw.Header().Add("Content-Type", "application/xml")
-		xml.NewEncoder(rw).Encode(customers)
+	if err != nil {
+		rw.WriteHeader(err.Code)
+		fmt.Fprintf(rw, err.Message)
 	} else {
-		rw.Header().Add("Content-Type", "application/json")
-		json.NewEncoder(rw).Encode(customers)
+		if r.Header.Get("Content-Type") == "application/xml" {
+			rw.Header().Add("Content-Type", "application/xml")
+			xml.NewEncoder(rw).Encode(customers)
+		} else {
+			rw.Header().Add("Content-Type", "application/json")
+			json.NewEncoder(rw).Encode(customers)
+		}
 	}
 }
