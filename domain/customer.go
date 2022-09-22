@@ -12,6 +12,6 @@ type Customer struct {
 	Status      string
 }
 type ICustomerRepository interface {
-	FindAll() ([]Customer, error)
-	GetById(string) (*Customer, *errs.AppError)
+	FindAll(status string) ([]Customer, *errs.AppError)
+	GetById(id string) (*Customer, *errs.AppError)
 }

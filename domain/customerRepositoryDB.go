@@ -13,15 +13,22 @@ type CustomerRepositoryDB struct {
 	client *sql.DB
 }
 
-func (d CustomerRepositoryDB) FindAll() ([]Customer, error) {
+func (d CustomerRepositoryDB) FindAll(status string) ([]Customer, *errs.AppError) {
 
-	findAllSql := "SELECT * FROM customers"
+	var rows *sql.Rows
+	var err error
 
-	rows, err := d.client.Query(findAllSql)
+	if status == "" {
+		findAllSql := "SELECT * FROM customers"
+		rows, err = d.client.Query(findAllSql)
+	} else {
+		findAllSql := "SELECT * FROM customers WHERE status = ?"
+		rows, err = d.client.Query(findAllSql, status)
+	}
 
 	if err != nil {
-		log.Println("Error while querying table customers", err.Error())
-		return nil, err
+		log.Println("Error while scanning table customers", err.Error())
+		return nil, errs.NewUnexpectedDatabaseError("unexpected database error")
 	}
 
 	customers := make([]Customer, 0)
@@ -32,7 +39,7 @@ func (d CustomerRepositoryDB) FindAll() ([]Customer, error) {
 
 		if err != nil {
 			log.Println("Error while scanning row of table customers", err.Error())
-			return nil, err
+			return nil, errs.NewUnexpectedDatabaseError("unexpected database error")
 		}
 
 		customers = append(customers, c)
@@ -56,7 +63,6 @@ func (d CustomerRepositoryDB) GetById(id string) (*Customer, *errs.AppError) {
 			log.Println("Error while scanning row of table customers", err.Error())
 			return nil, errs.NewUnexpectedDatabaseError("unexpected database error")
 		}
-
 	}
 
 	return &c, nil
