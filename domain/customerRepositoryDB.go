@@ -7,23 +7,24 @@ import (
 	"banking.com/abelh/errs"
 	"banking.com/abelh/logger"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
 )
 
 type CustomerRepositoryDB struct {
-	client *sql.DB
+	client *sqlx.DB
 }
 
 func (d CustomerRepositoryDB) FindAll(status string) ([]Customer, *errs.AppError) {
 
-	var rows *sql.Rows
 	var err error
+	customers := make([]Customer, 0)
 
 	if status == "" {
 		findAllSql := "SELECT * FROM customers"
-		rows, err = d.client.Query(findAllSql)
+		err = d.client.Select(&customers, findAllSql)
 	} else {
 		findAllSql := "SELECT * FROM customers WHERE status = ?"
-		rows, err = d.client.Query(findAllSql, status)
+		err = d.client.Select(&customers, findAllSql, status)
 	}
 
 	if err != nil {
@@ -31,30 +32,14 @@ func (d CustomerRepositoryDB) FindAll(status string) ([]Customer, *errs.AppError
 		return nil, errs.NewUnexpectedDatabaseError("unexpected database error")
 	}
 
-	customers := make([]Customer, 0)
-
-	for rows.Next() {
-		var c Customer
-		err = rows.Scan(&c.Id, &c.Name, &c.City, &c.ZipCode, &c.DateOfBirth, &c.Status)
-
-		if err != nil {
-			logger.Error("Error while scanning row of table customers" + err.Error())
-			return nil, errs.NewUnexpectedDatabaseError("unexpected database error")
-		}
-
-		customers = append(customers, c)
-	}
-
 	return customers, nil
 }
 
 func (d CustomerRepositoryDB) GetById(id string) (*Customer, *errs.AppError) {
 	findAllSql := "SELECT * FROM customers WHERE customer_id = ?"
-
-	row := d.client.QueryRow(findAllSql, id)
-
 	var c Customer
-	err := row.Scan(&c.Id, &c.Name, &c.City, &c.ZipCode, &c.DateOfBirth, &c.Status)
+
+	err := d.client.Get(&c, findAllSql, id)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -71,7 +56,7 @@ func (d CustomerRepositoryDB) GetById(id string) (*Customer, *errs.AppError) {
 
 func NewCustomerRepositoryDB() CustomerRepositoryDB {
 
-	client, err := sql.Open("mysql", "app:An0thrS3crt@tcp(localhost:3306)/banking")
+	client, err := sqlx.Open("mysql", "app:An0thrS3crt@tcp(localhost:3306)/banking")
 	if err != nil {
 		panic(err)
 	}
