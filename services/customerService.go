@@ -2,19 +2,20 @@ package services
 
 import (
 	"banking.com/abelh/domain"
+	"banking.com/abelh/dto"
 	"banking.com/abelh/errs"
 )
 
 type CustomerService interface {
-	GetAllCustomers(status string) ([]domain.Customer, *errs.AppError)
-	GetById(string) (*domain.Customer, *errs.AppError)
+	GetAllCustomers(status string) ([]dto.CustomerResponse, *errs.AppError)
+	GetById(string) (*dto.CustomerResponse, *errs.AppError)
 }
 
 type DefaultCustomerService struct {
 	repo domain.ICustomerRepository
 }
 
-func (s DefaultCustomerService) GetAllCustomers(status string) ([]domain.Customer, *errs.AppError) {
+func (s DefaultCustomerService) GetAllCustomers(status string) ([]dto.CustomerResponse, *errs.AppError) {
 	if status == "active" {
 		status = "1"
 	} else if status == "inactive" {
@@ -22,11 +23,32 @@ func (s DefaultCustomerService) GetAllCustomers(status string) ([]domain.Custome
 	} else {
 		status = ""
 	}
-	return s.repo.FindAll(status)
+
+	var response []dto.CustomerResponse
+
+	c, err := s.repo.FindAll(status)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, cs := range c {
+		response = append(response, cs.ToDto())
+	}
+
+	return response, nil
 }
 
-func (s DefaultCustomerService) GetById(id string) (*domain.Customer, *errs.AppError) {
-	return s.repo.GetById(id)
+func (s DefaultCustomerService) GetById(id string) (*dto.CustomerResponse, *errs.AppError) {
+	c, err := s.repo.GetById(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	response := c.ToDto()
+
+	return &response, nil
 }
 
 func NewCustomerService(repository domain.ICustomerRepository) DefaultCustomerService {

@@ -1,6 +1,9 @@
 package domain
 
-import "banking.com/abelh/errs"
+import (
+	"banking.com/abelh/dto"
+	"banking.com/abelh/errs"
+)
 
 // Define struct of customers
 type Customer struct {
@@ -11,6 +14,26 @@ type Customer struct {
 	DateOfBirth string `db:"date_of_birth"`
 	Status      string `db:"status"`
 }
+
+func (c Customer) ToDto() dto.CustomerResponse {
+	return dto.CustomerResponse{
+		Id:          c.Id,
+		Name:        c.Name,
+		DateOfBirth: c.DateOfBirth,
+		ZipCode:     c.ZipCode,
+		Status:      statusAsText(c.Status),
+		City:        c.City,
+	}
+}
+
+func statusAsText(status string) string {
+	statusText := "active"
+	if status == "0" {
+		statusText = "inactive"
+	}
+	return statusText
+}
+
 type ICustomerRepository interface {
 	/*
 		status = 1 -> active
