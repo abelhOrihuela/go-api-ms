@@ -2,9 +2,6 @@ package domain
 
 import (
 	"database/sql"
-	"fmt"
-	"os"
-	"time"
 
 	"banking.com/abelh/errs"
 	"banking.com/abelh/logger"
@@ -56,25 +53,7 @@ func (d CustomerRepositoryDB) GetById(id string) (*Customer, *errs.AppError) {
 
 }
 
-func NewCustomerRepositoryDB() CustomerRepositoryDB {
-
-	port := os.Getenv("DB_PORT")
-	host := os.Getenv("DB_HOST")
-	user := os.Getenv("DB_USER")
-	name := os.Getenv("DB_NAME")
-	passwd := os.Getenv("DB_PASSWD")
-
-	connection := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", user, passwd, host, port, name)
-	// app:An0thrS3crt@tcp(localhost:3306)/banking
-	client, err := sqlx.Open("mysql", connection)
-	if err != nil {
-		panic(err)
-	}
-	// See "Important settings" section.
-	client.SetConnMaxLifetime(time.Minute * 3)
-	client.SetMaxOpenConns(10)
-	client.SetMaxIdleConns(10)
-
+func NewCustomerRepositoryDB(client *sqlx.DB) CustomerRepositoryDB {
 	return CustomerRepositoryDB{
 		client,
 	}

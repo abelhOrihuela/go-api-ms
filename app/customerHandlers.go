@@ -27,7 +27,7 @@ func (ch *CustomerHandlers) getAllCustomers(rw http.ResponseWriter, r *http.Requ
 
 func (ch *CustomerHandlers) getById(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id := vars["id"]
+	id := vars["customer_id"]
 	customers, err := ch.service.GetById(id)
 
 	if err != nil {
